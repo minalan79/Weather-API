@@ -24,36 +24,34 @@ redisClient.on("error", (err) => console.error("Redis error:", err));
 //   console.info("Connected to ElastiCache Redis");
 // });
 
-await redisClient.connect();
+(async () => {
+  await redisClient.connect();
+})().catch(console.error);
 
 app.get("/api/:location", async (req, res) => {
   try {
     const cachedData = await redisClient.get(req.params.location);
     if (cachedData) {
       console.log("Using data from redis");
-      res.json(JSON.parse(cachedData)[req.params.location]);
+      res.json(JSON.parse(cachedData));
+      return;
     }
-    axios
-      .get(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${req.params.location}?unitGroup=metric&key=${weatherAPIKey}&contentType=json`
-      )
-      .then(function (response) {
-        redisClient.setEx(
-          req.params.location,
-          CACHE_EXPIRY,
-          JSON.stringify(response.data.description)
-        );
-        console.log("Done updating redis");
-        res.json(response.data.description);
-      })
-      .catch(function (error) {
-        // handle error
-        // console.log(error);
-        res.json(error);
-      });
+    const freshData = await axios.get(
+      `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${req.params.location}?unitGroup=metric&key=${weatherAPIKey}&contentType=json`
+    );
+    await redisClient.setEx(
+      req.params.location,
+      CACHE_EXPIRY,
+      JSON.stringify(freshData.data.description)
+    );
+    console.log("Cache miss: Data fetched from API and cached");
+    res.json(response.data.description);
   } catch (error) {
-    console.error("Error interacting with Redis:", error);
-    throw error;
+    console.error("Error handling the request:", error);
+    res.status(500).json({
+      error: "Unable to fetch weather data",
+      details: error.message,
+    });
   }
 });
 
