@@ -28,7 +28,7 @@ await redisClient.connect();
 
 app.get("/api/:location", async (req, res) => {
   try {
-    const cachedData = await client.get(req.params.location);
+    const cachedData = await redisClient.get(req.params.location);
     if (cachedData) {
       res.json(JSON.parse(cachedData)[req.params.location]);
     }
@@ -38,19 +38,17 @@ app.get("/api/:location", async (req, res) => {
       )
       .then(function (response) {
         res.json(response.data.description);
+	redisClient.setEx(
+		          req.params.location,
+		          CACHE_EXPIRY,
+		          JSON.stringify(response.data.description)
+		        );
       })
       .catch(function (error) {
         // handle error
         // console.log(error);
         res.json(error);
       })
-      .finally(function (response) {
-        redisClient.setEx(
-          req.params.location,
-          CACHE_EXPIRY,
-          JSON.stringify(response.data.description)
-        );
-      });
   } catch (error) {
     console.error("Error interacting with Redis:", error);
     throw error;
