@@ -38,13 +38,13 @@ app.get("/api/:location", async (req, res) => {
         `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${req.params.location}?unitGroup=metric&key=${weatherAPIKey}&contentType=json`
       )
       .then(function (response) {
-        res.json(response.data.description);
         redisClient.setEx(
           req.params.location,
           CACHE_EXPIRY,
           JSON.stringify(response.data.description)
         );
         console.log("Done updating redis");
+        res.json(response.data.description);
       })
       .catch(function (error) {
         // handle error
