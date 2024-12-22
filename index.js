@@ -1,10 +1,27 @@
-import axios from "axios";
 import express from "express";
+import redis from "redis";
+import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const port = 3000;
 
-app.use(express.json());
+// app.use(express.json());
+const redisHost = process.env.REDIS_HOST;
+const redisPort = process.env.REDIS_PORT;
+
+const redisClient = redis.createClient({
+  host: redisHost,
+  port: redisPort,
+});
+
+redisClient.on("error", (err) => console.error("Redis error:", err));
+
+redisClient.on("connect", () => {
+  console.info("Connected to ElastiCache Redis");
+});
 
 app.get("/api/:location", (req, res) => {
   axios
@@ -23,9 +40,9 @@ app.get("/api/:location", (req, res) => {
     });
 });
 
-app.get("/", (req, res) => {
-  res.sendFile("./public/index.html");
-});
+// app.get("/", (req, res) => {
+//   res.sendFile("./public/index.html");
+// });
 
 app.listen(port, () => {
   console.log(`API server running at http://localhost:${port}`);
