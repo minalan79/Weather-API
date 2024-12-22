@@ -3,9 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Weather Lookup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0083b0;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #0083b0;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #006d94;
+        }
+
+        .weather-display {
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .weather-display.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            display: none;
+            margin: 1rem 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .error {
+            color: #dc3545;
+            display: none;
+            margin: 1rem 0;
+        }
+
+        .error.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    Hello World
+    <div class="container">
+        <h1>Weather Lookup</h1>
+        <div class="search-box">
+            <input type="text" id="location" placeholder="Enter location..." aria-label="Location input">
+            <button onclick="getWeather()">Search</button>
+        </div>
+        <div class="loading">Loading weather data...</div>
+        <div class="error">Unable to fetch weather data. Please try again.</div>
+        <div class="weather-display"></div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const locationInput = document.getElementById('location');
+            const weatherDisplay = document.querySelector('.weather-display');
+            const loading = document.querySelector('.loading');
+            const error = document.querySelector('.error');
+
+            // Reset displays
+            weatherDisplay.classList.remove('active');
+            error.classList.remove('active');
+            loading.classList.add('active');
+
+            try {
+                // Assuming your backend endpoint is at /api/weather
+                const response = await fetch(`/api/weather?location=${encodeURIComponent(locationInput.value)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Weather data not available');
+                }
+
+                const weatherData = await response.text();
+                
+                // Display the weather data
+                weatherDisplay.textContent = weatherData;
+                weatherDisplay.classList.add('active');
+            } catch (err) {
+                error.classList.add('active');
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // Allow form submission with Enter key
+        document.getElementById('location').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+    </script>
 </body>
 </html>
