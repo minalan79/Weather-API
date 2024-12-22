@@ -30,6 +30,7 @@ app.get("/api/:location", async (req, res) => {
   try {
     const cachedData = await redisClient.get(req.params.location);
     if (cachedData) {
+      console.log("Using data from redis");
       res.json(JSON.parse(cachedData)[req.params.location]);
     }
     axios
@@ -38,17 +39,18 @@ app.get("/api/:location", async (req, res) => {
       )
       .then(function (response) {
         res.json(response.data.description);
-	redisClient.setEx(
-		          req.params.location,
-		          CACHE_EXPIRY,
-		          JSON.stringify(response.data.description)
-		        );
+        redisClient.setEx(
+          req.params.location,
+          CACHE_EXPIRY,
+          JSON.stringify(response.data.description)
+        );
+        console.log("Done updating redis");
       })
       .catch(function (error) {
         // handle error
         // console.log(error);
         res.json(error);
-      })
+      });
   } catch (error) {
     console.error("Error interacting with Redis:", error);
     throw error;
