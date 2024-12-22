@@ -45,12 +45,13 @@ app.get("/api/:location", async (req, res) => {
       JSON.stringify(freshData.data.description)
     );
     console.log("Cache miss: Data fetched from API and cached");
-    res.json(response.data.description);
+    res.json(freshData.data.description);
   } catch (error) {
     console.error("Error handling the request:", error);
     res.status(500).json({
       error: "Unable to fetch weather data",
       details: error.message,
+      data: error.response.data
     });
   }
 });
